@@ -36,6 +36,7 @@ export class OrdersService {
           orderAt: dto.orderAt,
           name: dto.name,
           totalAmount: dto.totalAmount,
+          status: dto.status,
         });
     
         const saved = await this.receiptRepo.save(order);
@@ -44,21 +45,46 @@ export class OrdersService {
           orderId: saved.orderId,
           name: saved.name,
           totalAmount: saved.totalAmount,
+          status: saved.status,
         });
     
         return saved;
       }
     
-      async update(orderId: string, dto: UpdateOrderDto) {
-        const order = await this.findOne(orderId);
-    
-        if (dto.orderAt !== undefined) order.orderAt = dto.orderAt;
-        if (dto.name !== undefined) order.name = dto.name;
-        if (dto.totalAmount !== undefined) order.totalAmount = dto.totalAmount;
-    
-        return this.receiptRepo.save(order);
-      }
-    
+        async update(orderId: string, dto: UpdateOrderDto) {
+          const order = await this.findOne(orderId);
+
+          const changed: any = {};
+
+          if (dto.orderAt !== undefined && dto.orderAt !== order.orderAt) {
+            order.orderAt = dto.orderAt;
+            changed.orderAt = dto.orderAt;
+          }
+
+          if (dto.name !== undefined && dto.name !== order.name) {
+            order.name = dto.name;
+            changed.name = dto.name;
+          }
+
+          if (dto.totalAmount !== undefined && dto.totalAmount !== order.totalAmount) {
+            order.totalAmount = dto.totalAmount;
+            changed.totalAmount = dto.totalAmount;
+          }
+
+          if (dto.status !== undefined && dto.status !== order.status) {
+            order.status = dto.status;
+            changed.status = dto.status;
+          }
+
+          const saved = await this.receiptRepo.save(order);
+
+          if (Object.keys(changed).length > 0) {
+            this.notifications.notify('order_updated', Object.assign({ orderId: saved.orderId }, changed));
+          }
+
+          return saved;
+        }
+
       async remove(orderId: string) {
         const order = await this.findOne(orderId);
         await this.receiptRepo.remove(order);
