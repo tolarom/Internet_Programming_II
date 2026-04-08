@@ -46,11 +46,34 @@ export class ReceiptsService {
   async update(receiptId: string, dto: UpdateReceiptDto) {
     const receipt = await this.findOne(receiptId);
 
-    if (dto.issuedAt !== undefined) receipt.issuedAt = new Date(dto.issuedAt);
-    if (dto.name !== undefined) receipt.name = dto.name;
-    if (dto.price !== undefined) receipt.price = dto.price;
+    const changed: any = {};
 
-    return this.receiptRepo.save(receipt);
+    if (dto.issuedAt !== undefined) {
+      const newDate = new Date(dto.issuedAt);
+      const oldIso = receipt.issuedAt ? new Date(receipt.issuedAt).toISOString() : null;
+      if (oldIso !== newDate.toISOString()) {
+        receipt.issuedAt = newDate;
+        changed.issuedAt = newDate;
+      }
+    }
+
+    if (dto.name !== undefined && dto.name !== receipt.name) {
+      receipt.name = dto.name;
+      changed.name = dto.name;
+    }
+
+    if (dto.price !== undefined && dto.price !== receipt.price) {
+      receipt.price = dto.price;
+      changed.price = dto.price;
+    }
+
+    const saved = await this.receiptRepo.save(receipt);
+
+    if (Object.keys(changed).length > 0) {
+      this.notifications.notify('receipt_updated', Object.assign({ receiptId: saved.receiptId }, changed));
+    }
+
+    return saved;
   }
 
   async remove(receiptId: string) {
