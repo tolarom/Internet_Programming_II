@@ -12,4 +12,8 @@ export class UpdateOrderDto {
     @IsOptional()
     @IsNumber()
     totalAmount?: number;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
   }
