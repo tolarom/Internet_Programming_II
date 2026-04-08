@@ -1,12 +1,16 @@
-import { IsString, IsArray, ValidateNested, IsDateString, IsNumber } from 'class-validator';
+import { IsString, IsArray, ValidateNested, IsDateString, IsNumber, IsOptional } from 'class-validator';
 export class CreateOrderDto {
 
     @IsDateString()
-    orderAt: string;
+    orderAt!: string;
 
     @IsString()
-    name: string;
+    name!: string;
 
     @IsNumber()
-    totalAmount: number;
+    totalAmount!: number;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
   }
